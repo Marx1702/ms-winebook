@@ -14,7 +14,7 @@ datasource db {
 }
 
 
-model User {
+model user {
   id         Int         @id @default(autoincrement())
   username   String
   email      String      @unique
@@ -23,101 +23,101 @@ model User {
   createdAt  DateTime    @map("created_at") @default(now())
 
   // Relación con UsuarioRol (1 usuario puede tener muchos roles a través de la tabla intermedia)
-  roles      UserRol[]
+  roles      user_rol[]
 
   // Relación con UserCompanies (1 usuario puede estar en muchas filas de la tabla intermedia)
-  companies  UserCompany[]
+  companies  user_company[]
 }
 
-model Rol {
+model rol {
   id         Int         @id @default(autoincrement())
   name       String
 
   // Relación con UsuarioRol (Un rol puede estar en muchas filas de la tabla intermedia)
-  users   UserRol[]
+  users   user_rol[]
 
-  RolesPermissions RolesPermissions[]
+  roles_permissions roles_permissions[]
 }
 
-model UserRol {
+model user_rol {
   id         Int         @id @default(autoincrement())
   userId  Int
   rolId      Int
 
   // Relación con Usuario (N a 1)
-  usuario    User     @relation(fields: [userId], references: [id])
+  user    user     @relation(fields: [userId], references: [id])
   // Relación con Rol (N a 1)
-  rol        Rol         @relation(fields: [rolId], references: [id])
+  rol        rol         @relation(fields: [rolId], references: [id])
   // Relación con RolesPermissions (1 rol puede estar asociado a muchos permisos a través de la tabla intermedia)
-  permisos   RolesPermissions[]
+  permissions   roles_permissions[]
   // Índices para mejorar las consultas
   @@index([userId], name: "user_idx")
-  @@index([rolId], name: "role_idx")
+  @@index([rolId], name: "rol_idx")
 }
 
-model Permission {
+model permission {
   id         Int                 @id @default(autoincrement())
   name       String
   // Relación con RolesPermissions (1 permiso puede estar asociado a muchas filas en la tabla intermedia)
-  roles      RolesPermissions[]
+  roles      roles_permissions[]
   // Relación con Action (1 permiso puede tener muchas acciones)
-  acciones   Action[]
+  actions   action[]
 }
 
-model RolesPermissions {
+model roles_permissions {
   id           Int      @id @default(autoincrement())
   rolId        Int
   permissionId    Int
   // Relación con Rol (N a 1)
-  rol          Rol      @relation(fields: [rolId], references: [id])
+  rol          rol      @relation(fields: [rolId], references: [id])
   // Relación con Permiso (N a 1)
-  permission      Permission  @relation(fields: [permissionId], references: [id])
+  permission      permission  @relation(fields: [permissionId], references: [id])
   // Índices para mejorar las consultas
-  @@index([rolId], name: "role_idx")
+  @@index([rolId], name: "rol_idx")
   @@index([permissionId], name: "permission_idx")
 
-  UsuarioRol UserRol[]
+  user_rol user_rol[]
 }
 
-model Action {
+model action {
   id         Int       @id @default(autoincrement())
   name       String
   permissionId  Int
   // Relación con Permiso (Muchas acciones pertenecen a un permiso)
-  permission    Permission   @relation(fields: [permissionId], references: [id])
+  permission    permission   @relation(fields: [permissionId], references: [id])
   // Índices para mejorar las consultas
-  @@index([permissionId], name: "permiso_idx")
+  @@index([permissionId], name: "permission_idx")
 }
 
-model Company {
+model company {
   id         Int              @id @default(autoincrement())
   name       String
   type       String
 
   // Relación con UserCompanies (1 empresa puede estar en muchas filas de la tabla intermedia)
-  users      UserCompany[]
+  users      user_company[]
 
   // Relación con Establishment (1 empresa puede tener muchos establecimientos)
-  establishments Establishment[]
+  establishments establishment[]
 }
 
-model UserCompany {
+model user_company {
   id         Int              @id @default(autoincrement())
   userId     Int
   companyId  Int
 
   // Relación con Usuario (N a 1)
-  user       User          @relation(fields: [userId], references: [id])
+  user       user          @relation(fields: [userId], references: [id])
 
   // Relación con Company (N a 1)
-  company    Company          @relation(fields: [companyId], references: [id])
+  company    company          @relation(fields: [companyId], references: [id])
 
   // Índices para mejorar las consultas
   @@index([userId], name: "user_idx")
   @@index([companyId], name: "company_idx")
 }
 
-model Establishment {
+model establishment {
   id             Int              @id @default(autoincrement())
   name           String
   type           String
@@ -125,7 +125,7 @@ model Establishment {
   companyId      Int
 
   // Relación con Company (N a 1)
-  company        Company          @relation(fields: [companyId], references: [id])
+  company        company          @relation(fields: [companyId], references: [id])
 
   // Índices para mejorar las consultas
   @@index([companyId], name: "company_idx")
