@@ -1,0 +1,132 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+
+model User {
+  id         Int         @id @default(autoincrement())
+  username   String
+  email      String      @unique
+  name       String
+  deleteAt   DateTime?   @map("delete_at")
+  createdAt  DateTime    @map("created_at") @default(now())
+
+  // Relación con UsuarioRol (1 usuario puede tener muchos roles a través de la tabla intermedia)
+  roles      UserRol[]
+
+  // Relación con UserCompanies (1 usuario puede estar en muchas filas de la tabla intermedia)
+  companies  UserCompany[]
+}
+
+model Rol {
+  id         Int         @id @default(autoincrement())
+  name       String
+
+  // Relación con UsuarioRol (Un rol puede estar en muchas filas de la tabla intermedia)
+  users   UserRol[]
+
+  RolesPermissions RolesPermissions[]
+}
+
+model UserRol {
+  id         Int         @id @default(autoincrement())
+  userId  Int
+  rolId      Int
+
+  // Relación con Usuario (N a 1)
+  usuario    User     @relation(fields: [userId], references: [id])
+  // Relación con Rol (N a 1)
+  rol        Rol         @relation(fields: [rolId], references: [id])
+  // Relación con RolesPermissions (1 rol puede estar asociado a muchos permisos a través de la tabla intermedia)
+  permisos   RolesPermissions[]
+  // Índices para mejorar las consultas
+  @@index([userId], name: "user_idx")
+  @@index([rolId], name: "role_idx")
+}
+
+model Permission {
+  id         Int                 @id @default(autoincrement())
+  name       String
+  // Relación con RolesPermissions (1 permiso puede estar asociado a muchas filas en la tabla intermedia)
+  roles      RolesPermissions[]
+  // Relación con Action (1 permiso puede tener muchas acciones)
+  acciones   Action[]
+}
+
+model RolesPermissions {
+  id           Int      @id @default(autoincrement())
+  rolId        Int
+  permissionId    Int
+  // Relación con Rol (N a 1)
+  rol          Rol      @relation(fields: [rolId], references: [id])
+  // Relación con Permiso (N a 1)
+  permission      Permission  @relation(fields: [permissionId], references: [id])
+  // Índices para mejorar las consultas
+  @@index([rolId], name: "role_idx")
+  @@index([permissionId], name: "permission_idx")
+
+  UsuarioRol UserRol[]
+}
+
+model Action {
+  id         Int       @id @default(autoincrement())
+  name       String
+  permissionId  Int
+  // Relación con Permiso (Muchas acciones pertenecen a un permiso)
+  permission    Permission   @relation(fields: [permissionId], references: [id])
+  // Índices para mejorar las consultas
+  @@index([permissionId], name: "permiso_idx")
+}
+
+model Company {
+  id         Int              @id @default(autoincrement())
+  name       String
+  type       String
+
+  // Relación con UserCompanies (1 empresa puede estar en muchas filas de la tabla intermedia)
+  users      UserCompany[]
+
+  // Relación con Establishment (1 empresa puede tener muchos establecimientos)
+  establishments Establishment[]
+}
+
+model UserCompany {
+  id         Int              @id @default(autoincrement())
+  userId     Int
+  companyId  Int
+
+  // Relación con Usuario (N a 1)
+  user       User          @relation(fields: [userId], references: [id])
+
+  // Relación con Company (N a 1)
+  company    Company          @relation(fields: [companyId], references: [id])
+
+  // Índices para mejorar las consultas
+  @@index([userId], name: "user_idx")
+  @@index([companyId], name: "company_idx")
+}
+
+model Establishment {
+  id             Int              @id @default(autoincrement())
+  name           String
+  type           String
+  location       String
+  companyId      Int
+
+  // Relación con Company (N a 1)
+  company        Company          @relation(fields: [companyId], references: [id])
+
+  // Índices para mejorar las consultas
+  @@index([companyId], name: "company_idx")
+}
